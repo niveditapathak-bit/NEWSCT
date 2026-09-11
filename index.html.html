@@ -1,0 +1,928 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Compliance Register</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,wght@0,500;0,600;0,700;1,500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#EDF1E7;
+    --paper-dim:#E3E9DC;
+    --paper-deep:#DCE4D3;
+    --ink:#1E2A20;
+    --ink-soft:#54634F;
+    --ink-faint:#8A9484;
+    --rule:#C7D0BE;
+    --red:#9C3B32;
+    --red-bg:#F3E3E0;
+    --gold:#93691A;
+    --gold-bg:#F1E7D0;
+    --green:#2F5D3A;
+    --green-bg:#DFEADD;
+    --blue:#2C4A6E;
+    --blue-bg:#DEE6EE;
+    --white:#FAFBF8;
+    --shadow-hard: 2px 2px 0 rgba(30,42,32,0.08);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'Inter',sans-serif;
+    font-size:14px;
+    line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3{
+    font-family:'Source Serif 4',serif;
+    font-weight:600;
+    margin:0;
+    color:var(--ink);
+  }
+  ::selection{background:var(--gold-bg);}
+  button{font-family:inherit;cursor:pointer;}
+  input,select,textarea{font-family:inherit;font-size:14px;}
+  a{color:var(--blue);}
+
+  /* ===== App shell ===== */
+  #app{display:flex;flex-direction:column;min-height:100vh;}
+
+  .topbar{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:14px 28px;
+    background:var(--ink);
+    color:var(--paper);
+    border-bottom:3px double var(--gold);
+  }
+  .topbar .brand{display:flex;align-items:baseline;gap:10px;}
+  .topbar .brand h1{color:var(--white);font-size:20px;letter-spacing:0.2px;}
+  .topbar .brand .subtitle{font-size:11.5px;color:var(--paper-deep);letter-spacing:.06em;}
+  .signin{display:flex;align-items:center;gap:10px;font-size:12.5px;color:var(--paper-deep);}
+  .signin select{
+    background:var(--ink);color:var(--white);
+    border:1px solid var(--ink-soft);border-radius:2px;
+    padding:5px 8px;
+  }
+  .signin .role-chip{
+    padding:3px 9px;border-radius:2px;font-size:11px;font-weight:600;
+    letter-spacing:.04em;
+  }
+
+  .body-row{display:flex;flex:1;min-height:0;}
+
+  /* ===== Index-tab rail ===== */
+  nav.rail{
+    width:168px;flex:none;
+    background:var(--paper-dim);
+    border-right:1px solid var(--rule);
+    padding:18px 0;
+  }
+  nav.rail button{
+    display:block;width:100%;text-align:left;
+    padding:10px 18px 10px 20px;
+    background:none;border:none;
+    border-left:3px solid transparent;
+    font-size:13px;font-weight:500;color:var(--ink-soft);
+    letter-spacing:.01em;
+  }
+  nav.rail button .count{
+    float:right;font-size:11px;color:var(--ink-faint);
+    font-variant-numeric:tabular-nums;
+  }
+  nav.rail button:hover{background:var(--paper-deep);color:var(--ink);}
+  nav.rail button.active{
+    background:var(--paper);
+    border-left-color:var(--gold);
+    color:var(--ink);font-weight:700;
+  }
+  nav.rail .rail-divider{
+    margin:12px 20px;border:none;border-top:1px solid var(--rule);
+  }
+
+  main{flex:1;padding:26px 32px 60px;overflow-y:auto;}
+  .view-header{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap;gap:10px;}
+  .view-header h2{font-size:22px;}
+  .view-header .desc{font-size:12.5px;color:var(--ink-soft);margin-top:2px;}
+
+  .btn{
+    border:1px solid var(--ink);background:var(--white);color:var(--ink);
+    padding:8px 14px;border-radius:2px;font-size:12.5px;font-weight:600;
+    box-shadow:var(--shadow-hard);
+  }
+  .btn:hover{background:var(--paper-deep);}
+  .btn.primary{background:var(--ink);color:var(--white);}
+  .btn.primary:hover{background:#2b3a2c;}
+  .btn.danger{border-color:var(--red);color:var(--red);}
+  .btn.danger:hover{background:var(--red-bg);}
+  .btn.small{padding:4px 9px;font-size:11.5px;box-shadow:none;}
+  .btn:disabled{opacity:.35;cursor:not-allowed;box-shadow:none;}
+
+  /* ===== KPI ledger tiles ===== */
+  .kpi-grid{
+    display:grid;grid-template-columns:repeat(5,1fr);gap:0;
+    border-top:2px solid var(--ink);border-bottom:2px solid var(--ink);
+    margin-bottom:26px;
+  }
+  .kpi{
+    padding:14px 16px;border-right:1px solid var(--rule);
+  }
+  .kpi:last-child{border-right:none;}
+  .kpi .label{font-size:11px;color:var(--ink-soft);letter-spacing:.03em;margin-bottom:6px;}
+  .kpi .value{font-family:'Source Serif 4',serif;font-size:28px;font-weight:700;font-variant-numeric:tabular-nums;}
+  .kpi.flag-red .value{color:var(--red);}
+  .kpi.flag-gold .value{color:var(--gold);}
+  .kpi.flag-green .value{color:var(--green);}
+
+  .panel{
+    background:var(--white);border:1px solid var(--rule);
+    margin-bottom:24px;
+  }
+  .panel-title{
+    padding:10px 16px;border-bottom:1px solid var(--rule);
+    font-size:13px;font-weight:700;color:var(--ink);
+    display:flex;justify-content:space-between;align-items:center;
+    background:var(--paper-dim);
+  }
+  .panel-title small{font-weight:400;color:var(--ink-soft);font-size:11.5px;}
+  .panel-empty{padding:22px 16px;color:var(--ink-faint);font-size:13px;font-style:italic;}
+
+  /* ===== Tables ===== */
+  table{width:100%;border-collapse:collapse;}
+  thead th{
+    text-align:left;font-size:11px;font-weight:600;color:var(--ink-soft);
+    padding:8px 12px;border-bottom:1px solid var(--ink);letter-spacing:.02em;
+    white-space:nowrap;
+  }
+  tbody td{
+    padding:9px 12px;border-bottom:1px solid var(--rule);font-size:12.8px;
+    vertical-align:middle;
+  }
+  tbody tr:nth-child(even){background:var(--paper);}
+  tbody tr:hover{background:var(--gold-bg);}
+  td.num,th.num{font-variant-numeric:tabular-nums;}
+  td.actions{white-space:nowrap;text-align:right;}
+  td.actions .btn{margin-left:6px;}
+
+  .tag{
+    display:inline-block;padding:2px 8px;border-radius:2px;
+    font-size:11px;font-weight:600;letter-spacing:.02em;border:1px solid transparent;
+  }
+  .tag.status-Pending-Maker{background:var(--blue-bg);color:var(--blue);border-color:var(--blue);}
+  .tag.status-Pending-Checker{background:var(--gold-bg);color:var(--gold);border-color:var(--gold);}
+  .tag.status-Pending-Approver{background:var(--gold-bg);color:var(--gold);border-color:var(--gold);}
+  .tag.status-Approved{background:var(--green-bg);color:var(--green);border-color:var(--green);}
+  .tag.status-Rejected{background:var(--red-bg);color:var(--red);border-color:var(--red);}
+  .tag.due-Overdue{background:var(--red-bg);color:var(--red);}
+  .tag.due-Due-Soon{background:var(--gold-bg);color:var(--gold);}
+  .tag.due-Upcoming{background:var(--blue-bg);color:var(--blue);}
+  .tag.due-Completed{background:var(--green-bg);color:var(--green);}
+
+  /* ===== Modal / drawer ===== */
+  .overlay{
+    position:fixed;inset:0;background:rgba(30,42,32,.45);
+    display:none;align-items:flex-start;justify-content:center;padding:40px 16px;z-index:50;
+    overflow-y:auto;
+  }
+  .overlay.open{display:flex;}
+  .modal{
+    background:var(--white);width:100%;max-width:720px;
+    border:1px solid var(--ink);box-shadow:6px 6px 0 rgba(30,42,32,.15);
+  }
+  .modal-head{
+    padding:14px 20px;border-bottom:2px solid var(--ink);
+    display:flex;justify-content:space-between;align-items:center;
+  }
+  .modal-head h3{font-size:17px;}
+  .modal-head button{background:none;border:none;font-size:20px;color:var(--ink-soft);}
+  .modal-body{padding:18px 20px;max-height:70vh;overflow-y:auto;}
+  .modal-foot{padding:14px 20px;border-top:1px solid var(--rule);display:flex;justify-content:flex-end;gap:8px;}
+  .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px 16px;}
+  .form-grid .full{grid-column:1/-1;}
+  .field label{display:block;font-size:11.5px;font-weight:600;color:var(--ink-soft);margin-bottom:4px;letter-spacing:.02em;}
+  .field input,.field select,.field textarea{
+    width:100%;padding:7px 9px;border:1px solid var(--rule);border-radius:2px;
+    background:var(--paper);color:var(--ink);
+  }
+  .field textarea{resize:vertical;min-height:52px;}
+  .field input:focus,.field select:focus,.field textarea:focus{
+    outline:2px solid var(--gold);outline-offset:0;border-color:var(--gold);
+  }
+  fieldset{border:1px dashed var(--rule);border-radius:2px;margin:14px 0 0;padding:10px 14px 14px;}
+  fieldset legend{font-size:11px;font-weight:700;color:var(--ink-soft);padding:0 6px;letter-spacing:.03em;}
+
+  .toast{
+    position:fixed;bottom:22px;right:22px;background:var(--ink);color:var(--white);
+    padding:10px 18px;border-radius:2px;font-size:12.5px;box-shadow:var(--shadow-hard);
+    opacity:0;transform:translateY(6px);transition:opacity .2s,transform .2s;z-index:80;
+  }
+  .toast.show{opacity:1;transform:translateY(0);}
+
+  .empty-state{
+    padding:40px 20px;text-align:center;color:var(--ink-soft);
+  }
+  .empty-state .btn{margin-top:10px;}
+
+  footer.hint{padding:10px 32px;font-size:11px;color:var(--ink-faint);border-top:1px solid var(--rule);background:var(--paper-dim);}
+
+  @media (max-width:900px){
+    .kpi-grid{grid-template-columns:repeat(2,1fr);}
+    .kpi{border-bottom:1px solid var(--rule);}
+    .body-row{flex-direction:column;}
+    nav.rail{width:100%;display:flex;overflow-x:auto;padding:8px;}
+    nav.rail button{width:auto;white-space:nowrap;border-left:none;border-bottom:3px solid transparent;}
+    nav.rail button.active{border-left:none;border-bottom-color:var(--gold);}
+    .form-grid{grid-template-columns:1fr;}
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="topbar">
+    <div class="brand">
+      <h1>Compliance Register</h1>
+      <span class="subtitle">Maker · Checker · Approver</span>
+    </div>
+    <div class="signin">
+      <span>Signed in as</span>
+      <select id="userSelect"></select>
+      <span class="role-chip" id="roleChip"></span>
+    </div>
+  </div>
+
+  <div class="body-row">
+    <nav class="rail" id="rail"></nav>
+    <main id="main"></main>
+  </div>
+
+  <footer class="hint">Data is saved to your browser automatically. Use "Reset demo data" in Admin tools (Users tab) to start over.</footer>
+</div>
+
+<div class="overlay" id="overlay">
+  <div class="modal" id="modal"></div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* =========================================================================
+   COMPLIANCE REGISTER — single-file app
+   Data model lives in `state.data`, persisted as one JSON blob via
+   window.storage under the key 'compliance-app-data' (personal, not shared).
+   Extend by: adding fields to RECORD_FIELDS / MODULE_FIELDS, adding a new
+   tab in TABS + a render function, or adding buttons in workflowActions().
+   ========================================================================= */
+
+const STATUS = { MAKER:'Pending Maker', CHECKER:'Pending Checker', APPROVER:'Pending Approver', APPROVED:'Approved', REJECTED:'Rejected' };
+const STATUS_LIST = Object.values(STATUS);
+const FREQ_LIST = ['One-Time','Monthly','Quarterly','Half-Yearly','Annually','Event-Based'];
+const REMINDER_DAYS = [30,15,7,3,1];
+const INSURANCE_SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/1-8mh2HgvKOR7ee17boZy3JTrT_yHp-9p6wLTq0iQKQc/export?format=csv';
+let insuranceSyncTimer;
+
+const MODULES = {
+  statutory:{ label:'Statutory Compliance', extra:[] },
+  insurance:{ label:'Insurance', extra:[
+    {k:'policyNumber',l:'Policy Number'},{k:'insurer',l:'Insurer'},{k:'policyType',l:'Type of Insurance'},
+    {k:'sumInsured',l:'Sum Insured',type:'number'},{k:'premium',l:'Premium Amount',type:'number'},
+    {k:'policyStart',l:'Policy Start',type:'date'},{k:'policyEnd',l:'Policy End',type:'date'}
+  ]},
+  banking:{ label:'Banking', extra:[
+    {k:'bankName',l:'Bank Name'},{k:'accountNumber',l:'Account Number'},{k:'facilityType',l:'Facility Type'},
+    {k:'sanctionLimit',l:'Sanction Limit',type:'number'},{k:'renewalDate',l:'Renewal / Review Date',type:'date'}
+  ]},
+  loans:{ label:'Loans', extra:[
+    {k:'lenderName',l:'Lender Name'},{k:'loanAccountNo',l:'Loan Account No'},{k:'loanType',l:'Loan Type'},
+    {k:'loanAmount',l:'Loan Amount',type:'number'},{k:'maturityDate',l:'Maturity Date',type:'date'},{k:'roi',l:'ROI (%)',type:'number'}
+  ]}
+};
+
+const COMMON_FIELDS = [
+  {k:'company',l:'Company',type:'select-company'},
+  {k:'complianceType',l:'Compliance Type'},
+  {k:'law',l:'Law / Regulation'},
+  {k:'section',l:'Section / Rule'},
+  {k:'form',l:'Form / Return'},
+  {k:'frequency',l:'Frequency',type:'select',options:FREQ_LIST},
+  {k:'duePattern',l:'Due Date Pattern (e.g. "15th of following month")'},
+  {k:'responsible',l:'Responsible Person'},
+  {k:'maker',l:'Maker (email)'},
+  {k:'checker',l:'Checker (email)'},
+  {k:'approver',l:'Approver (email)'},
+  {k:'lastFiled',l:'Last Filed Date',type:'date'},
+  {k:'nextDue',l:'Next Due Date',type:'date',required:true},
+  {k:'documents',l:'Documents (link)'},
+  {k:'remarks',l:'Remarks',type:'textarea',full:true},
+];
+
+const TABS = [
+  {id:'dashboard',label:'Dashboard'},
+  {id:'companies',label:'Companies'},
+  {id:'statutory',label:'Statutory Compliance'},
+  {id:'insurance',label:'Insurance'},
+  {id:'banking',label:'Banking'},
+  {id:'loans',label:'Loans'},
+  {id:'attachments',label:'Attachments'},
+  {id:'users',label:'Users'},
+  {id:'audit',label:'Audit Log'},
+];
+
+let state = {
+  currentTab:'dashboard',
+  currentUserId:null,
+  data:null,
+  loading:true,
+};
+
+// ---------------------------------------------------------------- storage
+async function loadData(){
+  try{
+    const res = await window.storage.get('compliance-app-data', false);
+    state.data = res ? JSON.parse(res.value) : seedData();
+  }catch(e){
+    state.data = seedData();
+  }
+  state.loading=false;
+  if(!state.currentUserId && state.data.users.length) state.currentUserId = state.data.users[0].id;
+  render();
+  syncInsuranceFromSheet();
+  clearInterval(insuranceSyncTimer);
+  insuranceSyncTimer = setInterval(syncInsuranceFromSheet, 300000);
+}
+async function saveData(){
+  try{
+    await window.storage.set('compliance-app-data', JSON.stringify(state.data), false);
+  }catch(e){ console.error('save failed', e); toast('Save failed — changes may not persist.'); }
+}
+
+function uid(prefix){ return prefix + '-' + Math.random().toString(36).slice(2,8).toUpperCase(); }
+function todayStr(){ return new Date().toISOString().slice(0,10); }
+function daysBetween(a,b){ const A=new Date(a+'T00:00:00'), B=new Date(b+'T00:00:00'); return Math.round((A-B)/86400000); }
+function fmtDate(d){ if(!d) return '—'; const dt=new Date(d+'T00:00:00'); return dt.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}); }
+function fmtMoney(n){ if(n===undefined||n===null||n==='') return '—'; return '₹' + Number(n).toLocaleString('en-IN'); }
+function slug(s){ return s.replace(/\s+/g,'-'); }
+
+function normalizeHeader(value){ return String(value||'').toLowerCase().replace(/[^a-z0-9]/g,''); }
+function parseCsvLine(line){
+  const cells=[]; let cell=''; let quoted=false;
+  for(let i=0;i<line.length;i++){
+    const ch=line[i];
+    if(ch==='"' && line[i+1]==='"'){ cell+='"'; i++; continue; }
+    if(ch==='"'){ quoted=!quoted; continue; }
+    if(ch===',' && !quoted){ cells.push(cell.trim()); cell=''; } else cell+=ch;
+  }
+  cells.push(cell.trim());
+  return cells;
+}
+function parseCsv(text){
+  const lines=text.replace(/^\uFEFF/,'').split(/\r?\n/).filter(line=>line.trim());
+  if(lines.length<2) return [];
+  const headers=parseCsvLine(lines[0]);
+  return lines.slice(1).map(line=>{
+    const values=parseCsvLine(line); const row={};
+    headers.forEach((header,index)=>row[normalizeHeader(header)]=values[index]||'');
+    return row;
+  });
+}
+function sheetValue(row, names){
+  for(const name of names){ const value=row[normalizeHeader(name)]; if(value!==undefined && value!=='') return value; }
+  return '';
+}
+function sheetDate(value){
+  if(!value) return '';
+  const text=String(value).trim();
+  if(/^\d{4}-\d{2}-\d{2}$/.test(text)) return text;
+  const parts=text.split(/[\/-]/);
+  if(parts.length===3){
+    if(parts[0].length===4) return `${parts[0]}-${parts[1].padStart(2,'0')}-${parts[2].padStart(2,'0')}`;
+    return `${parts[2].length===2?'20'+parts[2]:parts[2]}-${parts[1].padStart(2,'0')}-${parts[0].padStart(2,'0')}`;
+  }
+  const parsed=new Date(text); return Number.isNaN(parsed.getTime())?'':parsed.toISOString().slice(0,10);
+}
+function sheetNumber(value){
+  const number=Number(String(value||'').replace(/[^0-9.-]/g,''));
+  return Number.isFinite(number)?number:'';
+}
+function insuranceRecordFromSheet(row,index,previous){
+  const policyNumber=sheetValue(row,['policy number','policy no','policyno','policynumber']);
+  const id=sheetValue(row,['id','record id','recordid']) || policyNumber || `IN-${String(index+1).padStart(4,'0')}`;
+  return {
+    id, company:sheetValue(row,['company','company name','entity']), complianceType:sheetValue(row,['compliance type','compliancetype','type']),
+    law:sheetValue(row,['law','law/regulation','regulation']), section:sheetValue(row,['section','section/rule','rule']), form:sheetValue(row,['form','form/return']),
+    frequency:sheetValue(row,['frequency']) || 'Annually', duePattern:sheetValue(row,['due pattern','duedatepattern']), responsible:sheetValue(row,['responsible','responsible person']),
+    maker:sheetValue(row,['maker','maker email']), checker:sheetValue(row,['checker','checker email']), approver:sheetValue(row,['approver','approver email']),
+    status:sheetValue(row,['status']) || previous?.status || STATUS.MAKER, remarks:sheetValue(row,['remarks','remark']), documents:sheetValue(row,['documents','document link']),
+    lastFiled:sheetDate(sheetValue(row,['last filed','last filed date','lastfiled'])), nextDue:sheetDate(sheetValue(row,['next due','next due date','nextdue'])),
+    makerDate:previous?.makerDate||'', checkerDate:previous?.checkerDate||'', approverDate:previous?.approverDate||'',
+    policyNumber, insurer:sheetValue(row,['insurer','insurance company']), policyType:sheetValue(row,['policy type','type of insurance','policytype']),
+    sumInsured:sheetNumber(sheetValue(row,['sum insured','suminsured'])), premium:sheetNumber(sheetValue(row,['premium','premium amount'])),
+    policyStart:sheetDate(sheetValue(row,['policy start','policy start date','policystart'])), policyEnd:sheetDate(sheetValue(row,['policy end','policy end date','policyend']))
+  };
+}
+async function syncInsuranceFromSheet(){
+  try{
+    const response=await fetch(INSURANCE_SHEET_CSV_URL,{cache:'no-store'});
+    if(!response.ok) throw new Error(`HTTP ${response.status}`);
+    const rows=parseCsv(await response.text());
+    if(!rows.length) throw new Error('The sheet has no data rows');
+    const previous=state.data.records.insurance;
+    state.data.records.insurance=rows.map((row,index)=>{
+      const key=sheetValue(row,['id','record id','recordid','policy number','policy no','policyno','policynumber']);
+      return insuranceRecordFromSheet(row,index,previous.find(record=>record.id===key || record.policyNumber===key));
+    });
+    state.data.insuranceSheetLastSync=new Date().toISOString();
+    await saveData();
+    render();
+    toast('Insurance data synced from Google Sheet.');
+  }catch(error){
+    console.warn('Insurance sheet sync failed:',error);
+    if(state.currentTab==='insurance') toast('Insurance Sheet could not be synced. Check sharing access.');
+  }
+}
+
+function seedData(){
+  const companies = [
+    {id:'C001', name:'Acme Manufacturing Pvt Ltd', cin:'U12345HR2015PTC012345', group:'Manufacturing', contact:'Rahul Verma', email:'rahul.verma@example.com', active:true},
+    {id:'C002', name:'Northbridge Logistics Ltd', cin:'U60200DL2011PLC098765', group:'Logistics', contact:'Sana Khan', email:'sana.khan@example.com', active:true},
+  ];
+  const users = [
+    {id:'U001', name:'Priya Sharma', email:'priya.sharma@example.com', role:'Maker', active:true},
+    {id:'U002', name:'Arjun Mehta', email:'arjun.mehta@example.com', role:'Checker', active:true},
+    {id:'U003', name:'Neha Kapoor', email:'neha.kapoor@example.com', role:'Approver', active:true},
+    {id:'U004', name:'Vikram Rao', email:'vikram.rao@example.com', role:'Admin', active:true},
+  ];
+  const t = todayStr();
+  const plus = n => { const d=new Date(); d.setDate(d.getDate()+n); return d.toISOString().slice(0,10); };
+  const records = {
+    statutory:[
+      {id:'SC-0001', company:'Acme Manufacturing Pvt Ltd', complianceType:'Labour Law', law:'EPF & MP Act, 1952', section:'Sec 6', form:'ECR (Electronic Challan cum Return)', frequency:'Monthly', duePattern:'15th of following month', responsible:'Priya Sharma', maker:'priya.sharma@example.com', checker:'arjun.mehta@example.com', approver:'neha.kapoor@example.com', status:STATUS.MAKER, remarks:'Awaiting wage data from payroll', documents:'', lastFiled:plus(-16), nextDue:plus(1), makerDate:'', checkerDate:'', approverDate:''},
+      {id:'SC-0002', company:'Northbridge Logistics Ltd', complianceType:'Tax', law:'GST Act, 2017', section:'Sec 39', form:'GSTR-3B', frequency:'Monthly', duePattern:'20th of following month', responsible:'Priya Sharma', maker:'priya.sharma@example.com', checker:'arjun.mehta@example.com', approver:'neha.kapoor@example.com', status:STATUS.CHECKER, remarks:'Return prepared, pending review', documents:'', lastFiled:plus(-30), nextDue:plus(7), makerDate:plus(-1), checkerDate:'', approverDate:''},
+    ],
+    insurance:[
+      {id:'IN-0001', company:'Acme Manufacturing Pvt Ltd', complianceType:'Insurance Renewal', law:'Marine/Fire Insurance Policy', section:'N/A', form:'Renewal Confirmation', frequency:'Annually', duePattern:'Policy anniversary', responsible:'Rahul Verma', maker:'priya.sharma@example.com', checker:'arjun.mehta@example.com', approver:'neha.kapoor@example.com', status:STATUS.APPROVER, remarks:'Renewal quote received from insurer', documents:'', lastFiled:plus(-365), nextDue:plus(15), makerDate:plus(-5), checkerDate:plus(-2), approverDate:'',
+        policyNumber:'POL-778899', insurer:'ICICI Lombard', policyType:'Fire & Burglary', sumInsured:50000000, premium:185000, policyStart:plus(-350), policyEnd:plus(15)},
+    ],
+    banking:[
+      {id:'BK-0001', company:'Acme Manufacturing Pvt Ltd', complianceType:'Stock Statement Submission', law:'Sanction Letter Terms', section:'Clause 12', form:'Monthly Stock & Book Debt Statement', frequency:'Monthly', duePattern:'10th of following month', responsible:'Rahul Verma', maker:'priya.sharma@example.com', checker:'arjun.mehta@example.com', approver:'neha.kapoor@example.com', status:STATUS.APPROVED, remarks:'Stock valuation confirmed by auditor', documents:'', lastFiled:plus(-20), nextDue:plus(30), makerDate:plus(-10), checkerDate:plus(-8), approverDate:plus(-7),
+        bankName:'HDFC Bank', accountNumber:'50200012345678', facilityType:'Cash Credit', sanctionLimit:100000000, renewalDate:plus(30)},
+    ],
+    loans:[
+      {id:'LN-0001', company:'Northbridge Logistics Ltd', complianceType:'Covenant Compliance Certificate', law:'Loan Agreement', section:'Clause 8.2', form:'Quarterly Covenant Certificate', frequency:'Quarterly', duePattern:'30 days after quarter end', responsible:'Rahul Verma', maker:'priya.sharma@example.com', checker:'arjun.mehta@example.com', approver:'neha.kapoor@example.com', status:STATUS.MAKER, remarks:'', documents:'', lastFiled:plus(-90), nextDue:plus(-2), makerDate:'', checkerDate:'', approverDate:'',
+        lenderName:'Axis Bank', loanAccountNo:'AXBK998877', loanType:'Term Loan', loanAmount:250000000, maturityDate:'2029-03-31', roi:9.25},
+    ],
+  };
+  return { companies, users, records, attachments:[], auditLog:[
+    {id:'LOG-000001', ts:new Date().toISOString(), module:'Banking', recordId:'BK-0001', action:'Status Change', actor:'neha.kapoor@example.com', role:'Approver', oldValue:'Pending Approver', newValue:'Approved', remarks:''}
+  ]};
+}
+
+// ---------------------------------------------------------------- derived
+function allRecordsFlat(){
+  const out=[];
+  Object.keys(MODULES).forEach(m=>{ state.data.records[m].forEach(r=>out.push(Object.assign({_module:m}, r))); });
+  return out;
+}
+function dueStatusOf(rec){
+  if(rec.status===STATUS.APPROVED) return 'Completed';
+  if(!rec.nextDue) return 'Upcoming';
+  const d = daysBetween(rec.nextDue, todayStr());
+  if(d<0) return 'Overdue';
+  if(d<=7) return 'Due Soon';
+  return 'Upcoming';
+}
+function daysLeftOf(rec){ return rec.nextDue ? daysBetween(rec.nextDue, todayStr()) : null; }
+function currentUser(){ return state.data.users.find(u=>u.id===state.currentUserId) || state.data.users[0]; }
+function canAct(requiredRole){ const u=currentUser(); return u && (u.role===requiredRole || u.role==='Admin'); }
+
+function computeNotificationsToday(){
+  const items=[];
+  allRecordsFlat().forEach(rec=>{
+    if(rec.status===STATUS.APPROVED || rec.status===STATUS.REJECTED) return;
+    const d = daysLeftOf(rec);
+    if(d===null) return;
+    let trigger=null, audience=null;
+    if(REMINDER_DAYS.includes(d)){ trigger = (d===1?'1-Day Urgent':d+'-Day Reminder'); audience = d===1?'Maker, Checker, Approver':'Maker'; }
+    else if(d===0){ trigger='Due Date Escalation'; audience='Approver + Admins'; }
+    else if(d<0 && Math.abs(d)%7===0){ trigger='Overdue Admin Escalation'; audience='Admins'; }
+    if(trigger) items.push({rec, trigger, audience, d});
+  });
+  return items.sort((a,b)=>a.d-b.d);
+}
+
+function writeAudit(module, recordId, action, oldValue, newValue, remarks){
+  const u = currentUser();
+  const log = state.data.auditLog;
+  const id = 'LOG-' + String(log.length+1).padStart(6,'0');
+  log.unshift({id, ts:new Date().toISOString(), module, recordId, action, actor:u?u.email:'unknown', role:u?u.role:'—', oldValue:oldValue||'', newValue:newValue||'', remarks:remarks||''});
+}
+
+// ---------------------------------------------------------------- toast
+let toastTimer=null;
+function toast(msg){
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>el.classList.remove('show'), 2600);
+}
+
+// ---------------------------------------------------------------- render shell
+function render(){
+  renderTopbar();
+  renderRail();
+  renderMain();
+}
+function renderTopbar(){
+  const sel = document.getElementById('userSelect');
+  sel.innerHTML = state.data.users.map(u=>`<option value="${u.id}" ${u.id===state.currentUserId?'selected':''}>${u.name}</option>`).join('');
+  sel.onchange = e=>{ state.currentUserId = e.target.value; render(); };
+  const u = currentUser();
+  const chip = document.getElementById('roleChip');
+  const roleColors = {Admin:'var(--gold-bg)', Maker:'var(--blue-bg)', Checker:'var(--gold-bg)', Approver:'var(--green-bg)'};
+  chip.textContent = u ? u.role : '—';
+  chip.style.background = roleColors[u?u.role:''] || 'var(--paper-dim)';
+  chip.style.color = 'var(--ink)';
+}
+function renderRail(){
+  const rail = document.getElementById('rail');
+  const counts = {
+    dashboard:'', companies:state.data.companies.length,
+    statutory:state.data.records.statutory.length, insurance:state.data.records.insurance.length,
+    banking:state.data.records.banking.length, loans:state.data.records.loans.length,
+    attachments:state.data.attachments.length, users:state.data.users.length, audit:state.data.auditLog.length,
+  };
+  rail.innerHTML = TABS.map((t,i)=>{
+    const divider = (t.id==='attachments') ? '<hr class="rail-divider">' : '';
+    return `${divider}<button data-tab="${t.id}" class="${state.currentTab===t.id?'active':''}">${t.label}${counts[t.id]!==''?`<span class="count">${counts[t.id]}</span>`:''}</button>`;
+  }).join('');
+  rail.querySelectorAll('button').forEach(b=>b.onclick=()=>{ state.currentTab=b.dataset.tab; render(); });
+}
+function renderMain(){
+  const main = document.getElementById('main');
+  if(state.loading){ main.innerHTML = '<div class="empty-state">Loading register…</div>'; return; }
+  const renderers = { dashboard:renderDashboard, companies:renderCompanies, statutory:()=>renderModule('statutory'),
+    insurance:()=>renderModule('insurance'), banking:()=>renderModule('banking'), loans:()=>renderModule('loans'),
+    attachments:renderAttachments, users:renderUsers, audit:renderAudit };
+  main.innerHTML = '';
+  (renderers[state.currentTab] || renderDashboard)();
+}
+
+// ---------------------------------------------------------------- Dashboard
+function renderDashboard(){
+  const main = document.getElementById('main');
+  const recs = allRecordsFlat();
+  const total = recs.length;
+  const overdue = recs.filter(r=>dueStatusOf(r)==='Overdue').length;
+  const dueSoon = recs.filter(r=>dueStatusOf(r)==='Due Soon').length;
+  const completed = recs.filter(r=>dueStatusOf(r)==='Completed').length;
+  const upcoming30 = recs.filter(r=>{const d=daysLeftOf(r); return d!==null && d>=0 && d<=30;}).length;
+  const insRenew = state.data.records.insurance.filter(r=>{const d=daysLeftOf(r); return d!==null && d>=0 && d<=30;}).length;
+  const loanMat = state.data.records.loans.filter(r=>{const d=daysLeftOf(r); return d!==null && d>=0 && d<=30;}).length;
+  const pMaker = recs.filter(r=>r.status===STATUS.MAKER).length;
+  const pChecker = recs.filter(r=>r.status===STATUS.CHECKER).length;
+  const pApprover = recs.filter(r=>r.status===STATUS.APPROVER).length;
+
+  const tiles = [
+    ['Total Compliances', total, ''],
+    ['Overdue', overdue, 'flag-red'],
+    ['Due Soon (7d)', dueSoon, 'flag-gold'],
+    ['Completed', completed, 'flag-green'],
+    ['Upcoming (30d)', upcoming30, ''],
+    ['Insurance Renewals (30d)', insRenew, 'flag-gold'],
+    ['Loan Maturities (30d)', loanMat, 'flag-gold'],
+    ['Pending Maker', pMaker, 'flag-red'],
+    ['Pending Checker', pChecker, 'flag-gold'],
+    ['Pending Approver', pApprover, 'flag-gold'],
+  ];
+
+  const upcoming = recs.filter(r=>{const d=daysLeftOf(r); return d!==null && d<=30 && r.status!==STATUS.APPROVED;})
+    .sort((a,b)=>daysLeftOf(a)-daysLeftOf(b)).slice(0,12);
+
+  const notifications = computeNotificationsToday();
+
+  main.innerHTML = `
+    <div class="view-header"><div><h2>Dashboard</h2><div class="desc">Signed in as ${currentUser()?currentUser().name+' — '+currentUser().role:'—'} · ${fmtDate(todayStr())}</div></div></div>
+    <div class="kpi-grid">
+      ${tiles.slice(0,5).map(t=>`<div class="kpi ${t[2]}"><div class="label">${t[0]}</div><div class="value">${t[1]}</div></div>`).join('')}
+    </div>
+    <div class="kpi-grid">
+      ${tiles.slice(5,10).map(t=>`<div class="kpi ${t[2]}"><div class="label">${t[0]}</div><div class="value">${t[1]}</div></div>`).join('')}
+    </div>
+
+    <div class="panel">
+      <div class="panel-title">Upcoming Deadlines <small>next 30 days, soonest first</small></div>
+      ${upcoming.length? `<table><thead><tr><th>Module</th><th>Record</th><th>Company</th><th>Compliance Type</th><th class="num">Due</th><th class="num">Days Left</th><th>Status</th></tr></thead><tbody>
+        ${upcoming.map(r=>`<tr><td>${MODULES[r._module].label}</td><td>${r.id}</td><td>${r.company}</td><td>${r.complianceType}</td><td class="num">${fmtDate(r.nextDue)}</td><td class="num">${daysLeftOf(r)}</td><td><span class="tag status-${slug(r.status)}">${r.status}</span></td></tr>`).join('')}
+      </tbody></table>` : '<div class="panel-empty">Nothing due in the next 30 days.</div>'}
+    </div>
+
+    <div class="panel">
+      <div class="panel-title">Notifications Due Today <small>preview of what the reminder schedule would send right now</small></div>
+      ${notifications.length? `<table><thead><tr><th>Module</th><th>Record</th><th>Trigger</th><th>Would notify</th><th class="num">Days</th></tr></thead><tbody>
+        ${notifications.map(n=>`<tr><td>${MODULES[n.rec._module].label}</td><td>${n.rec.id}</td><td><span class="tag ${n.d<0?'due-Overdue':(n.d<=7?'due-Due-Soon':'due-Upcoming')}">${n.trigger}</span></td><td>${n.audience}</td><td class="num">${n.d}</td></tr>`).join('')}
+      </tbody></table>` : '<div class="panel-empty">No reminders trigger today.</div>'}
+    </div>
+  `;
+}
+
+// ---------------------------------------------------------------- Companies
+function renderCompanies(){
+  const main = document.getElementById('main');
+  const rows = state.data.companies;
+  main.innerHTML = `
+    <div class="view-header"><div><h2>Companies</h2><div class="desc">Entities tracked across every compliance module.</div></div>
+      <button class="btn primary" id="addCompanyBtn">+ Add Company</button></div>
+    <div class="panel">
+      ${rows.length? `<table><thead><tr><th>ID</th><th>Company</th><th>CIN / Reg. No</th><th>Group</th><th>Contact</th><th>Email</th><th>Active</th><th></th></tr></thead>
+      <tbody>${rows.map(c=>`<tr>
+        <td>${c.id}</td><td>${c.name}</td><td>${c.cin||'—'}</td><td>${c.group||'—'}</td><td>${c.contact||'—'}</td><td>${c.email||'—'}</td>
+        <td>${c.active?'Yes':'No'}</td>
+        <td class="actions"><button class="btn small" data-edit="${c.id}">Edit</button><button class="btn small danger" data-del="${c.id}">Delete</button></td>
+      </tr>`).join('')}</tbody></table>` : `<div class="empty-state">No companies yet.<br><button class="btn primary" id="addCompanyBtn2">+ Add Company</button></div>`}
+    </div>
+  `;
+  const openForm = (existing)=>openCompanyModal(existing);
+  document.getElementById('addCompanyBtn') && (document.getElementById('addCompanyBtn').onclick = ()=>openForm(null));
+  document.getElementById('addCompanyBtn2') && (document.getElementById('addCompanyBtn2').onclick = ()=>openForm(null));
+  main.querySelectorAll('[data-edit]').forEach(b=>b.onclick=()=>openForm(state.data.companies.find(c=>c.id===b.dataset.edit)));
+  main.querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>{
+    if(confirm('Delete this company record?')){ state.data.companies = state.data.companies.filter(c=>c.id!==b.dataset.del); saveData(); render(); toast('Company deleted.'); }
+  });
+}
+function openCompanyModal(existing){
+  const c = existing || {id:uid('C'), name:'', cin:'', group:'', contact:'', email:'', active:true};
+  showModal(`${existing?'Edit':'Add'} Company`, `
+    <div class="form-grid">
+      <div class="field"><label>Company Name</label><input id="f_name" value="${c.name}"></div>
+      <div class="field"><label>CIN / Registration No</label><input id="f_cin" value="${c.cin}"></div>
+      <div class="field"><label>Group / Category</label><input id="f_group" value="${c.group}"></div>
+      <div class="field"><label>Contact Person</label><input id="f_contact" value="${c.contact}"></div>
+      <div class="field"><label>Contact Email</label><input id="f_email" value="${c.email}"></div>
+      <div class="field"><label>Active</label><select id="f_active"><option value="true" ${c.active?'selected':''}>Yes</option><option value="false" ${!c.active?'selected':''}>No</option></select></div>
+    </div>
+  `, ()=>{
+    c.name=val('f_name'); c.cin=val('f_cin'); c.group=val('f_group'); c.contact=val('f_contact'); c.email=val('f_email'); c.active = val('f_active')==='true';
+    if(!c.name){ toast('Company name is required.'); return false; }
+    if(!existing) state.data.companies.push(c);
+    saveData(); render(); toast('Company saved.'); return true;
+  });
+}
+
+// ---------------------------------------------------------------- Users
+function renderUsers(){
+  const main = document.getElementById('main');
+  const rows = state.data.users;
+  main.innerHTML = `
+    <div class="view-header"><div><h2>Users</h2><div class="desc">Controls the role-based actions available on each record. Admin tools below.</div></div>
+      <button class="btn primary" id="addUserBtn">+ Add User</button></div>
+    <div class="panel">
+      <table><thead><tr><th>ID</th><th>Name</th><th>Email</th><th>Role</th><th>Active</th><th></th></tr></thead>
+      <tbody>${rows.map(u=>`<tr>
+        <td>${u.id}</td><td>${u.name}</td><td>${u.email}</td><td><span class="tag status-${slug(u.role==='Pending Maker'?u.role:u.role)}">${u.role}</span></td><td>${u.active?'Yes':'No'}</td>
+        <td class="actions"><button class="btn small" data-edit="${u.id}">Edit</button><button class="btn small danger" data-del="${u.id}">Delete</button></td>
+      </tr>`).join('')}</tbody></table>
+    </div>
+    <div class="panel">
+      <div class="panel-title">Admin Tools</div>
+      <div style="padding:14px 16px;display:flex;gap:10px;flex-wrap:wrap;">
+        <button class="btn danger" id="resetBtn">Reset demo data</button>
+        <span style="font-size:12px;color:var(--ink-soft);align-self:center;">Wipes everything in this browser and reloads the sample dataset.</span>
+      </div>
+    </div>
+  `;
+  document.getElementById('addUserBtn').onclick = ()=>openUserModal(null);
+  main.querySelectorAll('[data-edit]').forEach(b=>b.onclick=()=>openUserModal(state.data.users.find(u=>u.id===b.dataset.edit)));
+  main.querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>{
+    if(confirm('Delete this user?')){ state.data.users = state.data.users.filter(u=>u.id!==b.dataset.del); if(state.currentUserId===b.dataset.del) state.currentUserId=state.data.users[0]?.id||null; saveData(); render(); toast('User deleted.'); }
+  });
+  document.getElementById('resetBtn').onclick = ()=>{
+    if(confirm('This clears all saved data in this browser and restores the sample dataset. Continue?')){
+      state.data = seedData(); state.currentUserId = state.data.users[0].id; saveData(); render(); toast('Demo data restored.');
+    }
+  };
+}
+function openUserModal(existing){
+  const u = existing || {id:uid('U'), name:'', email:'', role:'Maker', active:true};
+  showModal(`${existing?'Edit':'Add'} User`, `
+    <div class="form-grid">
+      <div class="field"><label>Name</label><input id="f_name" value="${u.name}"></div>
+      <div class="field"><label>Email</label><input id="f_email" value="${u.email}"></div>
+      <div class="field"><label>Role</label><select id="f_role">${['Admin','Maker','Checker','Approver'].map(r=>`<option ${u.role===r?'selected':''}>${r}</option>`).join('')}</select></div>
+      <div class="field"><label>Active</label><select id="f_active"><option value="true" ${u.active?'selected':''}>Yes</option><option value="false" ${!u.active?'selected':''}>No</option></select></div>
+    </div>
+  `, ()=>{
+    u.name=val('f_name'); u.email=val('f_email'); u.role=val('f_role'); u.active=val('f_active')==='true';
+    if(!u.name||!u.email){ toast('Name and email are required.'); return false; }
+    if(!existing) state.data.users.push(u);
+    saveData(); render(); toast('User saved.'); return true;
+  });
+}
+
+// ---------------------------------------------------------------- Module (Statutory/Insurance/Banking/Loans)
+function renderModule(mod){
+  const main = document.getElementById('main');
+  const meta = MODULES[mod];
+  const rows = state.data.records[mod];
+  main.innerHTML = `
+    <div class="view-header"><div><h2>${meta.label}</h2><div class="desc">${rows.length} record${rows.length===1?'':'s'} · workflow: Maker → Checker → Approver</div></div>
+      ${mod==='insurance'?`<button class="btn" id="syncInsuranceBtn">Sync Insurance Sheet</button>`:''}
+      <button class="btn primary" id="addRecBtn">+ New Record</button></div>
+    <div class="panel">
+      ${rows.length ? `<table><thead><tr>
+        <th>ID</th><th>Company</th><th>Compliance Type</th><th class="num">Next Due</th><th class="num">Days</th><th>Status</th><th>Due Status</th><th>Responsible</th><th></th>
+      </tr></thead><tbody>
+        ${rows.map(r=>{
+          const ds = dueStatusOf(r); const dl = daysLeftOf(r);
+          return `<tr>
+            <td>${r.id}</td><td>${r.company||'—'}</td><td>${r.complianceType||'—'}</td>
+            <td class="num">${fmtDate(r.nextDue)}</td><td class="num">${dl===null?'—':dl}</td>
+            <td><span class="tag status-${slug(r.status)}">${r.status}</span></td>
+            <td><span class="tag due-${slug(ds)}">${ds}</span></td>
+            <td>${r.responsible||'—'}</td>
+            <td class="actions">
+              ${workflowButtons(mod, r)}
+              <button class="btn small" data-view="${r.id}">Open</button>
+            </td>
+          </tr>`;
+        }).join('')}
+      </tbody></table>` : `<div class="empty-state">No records yet.<br><button class="btn primary" id="addRecBtn2">+ New Record</button></div>`}
+    </div>
+  `;
+  document.getElementById('addRecBtn').onclick = ()=>openRecordModal(mod, null);
+  document.getElementById('syncInsuranceBtn') && (document.getElementById('syncInsuranceBtn').onclick = syncInsuranceFromSheet);
+  document.getElementById('addRecBtn2') && (document.getElementById('addRecBtn2').onclick = ()=>openRecordModal(mod, null));
+  main.querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>openRecordModal(mod, rows.find(r=>r.id===b.dataset.view)));
+  wireWorkflowButtons(main, mod, rows);
+}
+
+function workflowButtons(mod, r){
+  let btns='';
+  if(r.status===STATUS.MAKER) btns += `<button class="btn small" data-wf="submit" data-id="${r.id}" ${canAct('Maker')?'':'disabled title="Requires Maker role"'}>Submit</button>`;
+  else if(r.status===STATUS.CHECKER) btns += `<button class="btn small" data-wf="check" data-id="${r.id}" ${canAct('Checker')?'':'disabled title="Requires Checker role"'}>Send to Approver</button>`;
+  else if(r.status===STATUS.APPROVER) btns += `<button class="btn small" data-wf="approve" data-id="${r.id}" ${canAct('Approver')?'':'disabled title="Requires Approver role"'}>Approve</button><button class="btn small danger" data-wf="reject" data-id="${r.id}" ${canAct('Approver')?'':'disabled'}>Reject</button>`;
+  return btns;
+}
+function wireWorkflowButtons(main, mod, rows){
+  main.querySelectorAll('[data-wf]').forEach(b=>{
+    b.onclick = ()=>{
+      const r = rows.find(x=>x.id===b.dataset.id);
+      const old = r.status; const now = new Date().toISOString();
+      if(b.dataset.wf==='submit'){ r.status=STATUS.CHECKER; r.makerDate=now; }
+      if(b.dataset.wf==='check'){ r.status=STATUS.APPROVER; r.checkerDate=now; }
+      if(b.dataset.wf==='approve'){ r.status=STATUS.APPROVED; r.approverDate=now; }
+      if(b.dataset.wf==='reject'){ const reason=prompt('Reason for rejection (optional):')||''; r.status=STATUS.REJECTED; r.approverDate=now; r.remarks = (r.remarks?r.remarks+' | ':'') + (reason?('Rejected: '+reason):'Rejected'); }
+      writeAudit(MODULES[mod].label, r.id, 'Status Change', old, r.status, '');
+      saveData(); render(); toast('Status updated → ' + r.status);
+    };
+  });
+}
+
+function openRecordModal(mod, existing){
+  const meta = MODULES[mod];
+  const r = existing || Object.assign({id:uid(mod.slice(0,2).toUpperCase()), status:STATUS.MAKER, makerDate:'', checkerDate:'', approverDate:''},
+    Object.fromEntries(COMMON_FIELDS.map(f=>[f.k,''])), Object.fromEntries(meta.extra.map(f=>[f.k,''])));
+
+  const fieldHtml = (f)=>{
+    const value = r[f.k] ?? '';
+    if(f.type==='select-company'){
+      return `<div class="field${f.full?' full':''}"><label>${f.l}</label><select id="f_${f.k}">
+        <option value="">— select —</option>
+        ${state.data.companies.map(c=>`<option value="${c.name}" ${value===c.name?'selected':''}>${c.name}</option>`).join('')}
+      </select></div>`;
+    }
+    if(f.type==='select'){
+      return `<div class="field${f.full?' full':''}"><label>${f.l}</label><select id="f_${f.k}">
+        <option value="">— select —</option>
+        ${f.options.map(o=>`<option ${value===o?'selected':''}>${o}</option>`).join('')}
+      </select></div>`;
+    }
+    if(f.type==='textarea'){
+      return `<div class="field${f.full?' full':''}"><label>${f.l}</label><textarea id="f_${f.k}">${value}</textarea></div>`;
+    }
+    return `<div class="field${f.full?' full':''}"><label>${f.l}${f.required?' *':''}</label><input id="f_${f.k}" type="${f.type||'text'}" value="${value}"></div>`;
+  };
+
+  const extraHtml = meta.extra.length ? `<fieldset><legend>${meta.label} details</legend><div class="form-grid">${meta.extra.map(fieldHtml).join('')}</div></fieldset>` : '';
+
+  showModal(`${existing?'Edit':'New'} — ${meta.label} Record (${r.id})`, `
+    <div class="form-grid">${COMMON_FIELDS.map(fieldHtml).join('')}</div>
+    ${extraHtml}
+    <fieldset><legend>Workflow</legend>
+      <div class="form-grid">
+        <div class="field"><label>Status</label><select id="f_status">${STATUS_LIST.map(s=>`<option ${r.status===s?'selected':''}>${s}</option>`).join('')}</select></div>
+      </div>
+    </fieldset>
+  `, ()=>{
+    COMMON_FIELDS.forEach(f=>r[f.k]=val('f_'+f.k));
+    meta.extra.forEach(f=>r[f.k]=val('f_'+f.k));
+    if(!r.company){ toast('Company is required.'); return false; }
+    if(!r.nextDue){ toast('Next Due Date is required.'); return false; }
+    const oldStatus = existing ? existing.status : null;
+    r.status = val('f_status');
+    if(!existing){
+      state.data.records[mod].push(r);
+      writeAudit(meta.label, r.id, 'Record Created', '', r.status, '');
+    } else if(oldStatus !== r.status){
+      writeAudit(meta.label, r.id, 'Status Change', oldStatus, r.status, '');
+    }
+    saveData(); render(); toast('Record saved.'); return true;
+  }, existing ? ()=>{
+    if(confirm('Delete this record?')){
+      state.data.records[mod] = state.data.records[mod].filter(x=>x.id!==r.id);
+      writeAudit(meta.label, r.id, 'Record Deleted', r.status, '', '');
+      saveData(); closeModal(); render(); toast('Record deleted.');
+    }
+  } : null);
+}
+
+// ---------------------------------------------------------------- Attachments
+function renderAttachments(){
+  const main = document.getElementById('main');
+  const rows = state.data.attachments;
+  main.innerHTML = `
+    <div class="view-header"><div><h2>Attachments</h2><div class="desc">Linked documents for any compliance record. Store the file in Drive/SharePoint and paste the link here.</div></div>
+      <button class="btn primary" id="addAttBtn">+ Add Attachment</button></div>
+    <div class="panel">
+      ${rows.length? `<table><thead><tr><th>ID</th><th>Module</th><th>Record ID</th><th>File Name</th><th>Link</th><th>Uploaded By</th><th class="num">Date</th><th></th></tr></thead>
+      <tbody>${rows.map(a=>`<tr>
+        <td>${a.id}</td><td>${MODULES[a.module]?MODULES[a.module].label:a.module}</td><td>${a.recordId}</td><td>${a.fileName}</td>
+        <td>${a.link?`<a href="${a.link}" target="_blank" rel="noopener">Open</a>`:'—'}</td><td>${a.uploadedBy||'—'}</td><td class="num">${fmtDate(a.date)}</td>
+        <td class="actions"><button class="btn small danger" data-del="${a.id}">Delete</button></td>
+      </tr>`).join('')}</tbody></table>` : `<div class="empty-state">No attachments logged yet.<br><button class="btn primary" id="addAttBtn2">+ Add Attachment</button></div>`}
+    </div>
+  `;
+  document.getElementById('addAttBtn').onclick = ()=>openAttachmentModal();
+  document.getElementById('addAttBtn2') && (document.getElementById('addAttBtn2').onclick = ()=>openAttachmentModal());
+  main.querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>{
+    if(confirm('Delete this attachment entry?')){ state.data.attachments = state.data.attachments.filter(a=>a.id!==b.dataset.del); saveData(); render(); toast('Attachment removed.'); }
+  });
+}
+function openAttachmentModal(){
+  const a = {id:uid('ATT'), module:'statutory', recordId:'', fileName:'', link:'', uploadedBy: currentUser()?currentUser().email:'', date: todayStr(), description:''};
+  const recordOptions = ()=> state.data.records[a.module].map(r=>`<option value="${r.id}">${r.id} — ${r.complianceType||''}</option>`).join('');
+  showModal('Add Attachment', `
+    <div class="form-grid">
+      <div class="field"><label>Module</label><select id="f_module">${Object.keys(MODULES).map(m=>`<option value="${m}">${MODULES[m].label}</option>`).join('')}</select></div>
+      <div class="field"><label>Record</label><select id="f_recordId">${recordOptions()}</select></div>
+      <div class="field"><label>File Name</label><input id="f_fileName" placeholder="e.g. Fire_Policy_Renewal_2026.pdf"></div>
+      <div class="field"><label>File Link</label><input id="f_link" placeholder="https://drive.google.com/..."></div>
+      <div class="field"><label>Uploaded By</label><input id="f_uploadedBy" value="${a.uploadedBy}"></div>
+      <div class="field"><label>Date</label><input id="f_date" type="date" value="${a.date}"></div>
+      <div class="field full"><label>Description</label><textarea id="f_description"></textarea></div>
+    </div>
+  `, ()=>{
+    a.module=val('f_module'); a.recordId=val('f_recordId'); a.fileName=val('f_fileName'); a.link=val('f_link');
+    a.uploadedBy=val('f_uploadedBy'); a.date=val('f_date'); a.description=val('f_description');
+    if(!a.fileName){ toast('File name is required.'); return false; }
+    state.data.attachments.push(a); saveData(); render(); toast('Attachment logged.'); return true;
+  });
+  document.getElementById('f_module').onchange = (e)=>{ a.module=e.target.value; document.getElementById('f_recordId').innerHTML = recordOptions(); };
+}
+
+// ---------------------------------------------------------------- Audit log
+function renderAudit(){
+  const main = document.getElementById('main');
+  const rows = state.data.auditLog;
+  main.innerHTML = `
+    <div class="view-header"><div><h2>Audit Log</h2><div class="desc">Read-only. Every status change, and record creation/deletion, writes here automatically.</div></div></div>
+    <div class="panel">
+      ${rows.length? `<table><thead><tr><th>Log ID</th><th class="num">Timestamp</th><th>Module</th><th>Record</th><th>Action</th><th>By</th><th>Role</th><th>Old → New</th></tr></thead>
+      <tbody>${rows.map(l=>`<tr>
+        <td>${l.id}</td><td class="num">${new Date(l.ts).toLocaleString('en-GB')}</td><td>${l.module}</td><td>${l.recordId}</td><td>${l.action}</td><td>${l.actor}</td><td>${l.role}</td>
+        <td>${l.oldValue||'—'} → ${l.newValue||'—'}</td>
+      </tr>`).join('')}</tbody></table>` : '<div class="panel-empty">No activity yet.</div>'}
+    </div>
+  `;
+}
+
+// ---------------------------------------------------------------- modal helpers
+let modalOnSave=null, modalOnDelete=null;
+function showModal(title, bodyHtml, onSave, onDelete){
+  modalOnSave = onSave; modalOnDelete = onDelete;
+  document.getElementById('modal').innerHTML = `
+    <div class="modal-head"><h3>${title}</h3><button id="closeModalBtn">&times;</button></div>
+    <div class="modal-body">${bodyHtml}</div>
+    <div class="modal-foot">
+      ${onDelete?'<button class="btn danger" id="modalDeleteBtn" style="margin-right:auto;">Delete</button>':''}
+      <button class="btn" id="cancelModalBtn">Cancel</button>
+      <button class="btn primary" id="saveModalBtn">Save</button>
+    </div>
+  `;
+  document.getElementById('overlay').classList.add('open');
+  document.getElementById('closeModalBtn').onclick = closeModal;
+  document.getElementById('cancelModalBtn').onclick = closeModal;
+  document.getElementById('saveModalBtn').onclick = ()=>{ if(modalOnSave && modalOnSave()!==false) closeModal(); };
+  if(onDelete) document.getElementById('modalDeleteBtn').onclick = onDelete;
+}
+function closeModal(){ document.getElementById('overlay').classList.remove('open'); document.getElementById('modal').innerHTML=''; }
+function val(id){ const el=document.getElementById(id); return el ? el.value : ''; }
+document.getElementById('overlay').addEventListener('click', (e)=>{ if(e.target.id==='overlay') closeModal(); });
+
+// ---------------------------------------------------------------- boot
+document.addEventListener('visibilitychange', ()=>{
+  if(document.visibilityState==='visible' && state.data) syncInsuranceFromSheet();
+});
+loadData();
+</script>
+</body>
+</html>
